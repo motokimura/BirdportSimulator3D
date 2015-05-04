@@ -15,7 +15,10 @@ http://mokk.net/birdport/sim3/
 
 ## Screen shot
 
-<img src="https://raw.githubusercontent.com/motokimura/BirdportSimulator3D/master/screen_capture.png" />
+<img src="https://raw.githubusercontent.com/motokimura/BirdportSimulator3D/master/screen_capture_1.png" />
+<br />
+<br />
+<img src="https://raw.githubusercontent.com/motokimura/BirdportSimulator3D/master/screen_capture_2.png" />
 
 ## Requirement
 
@@ -27,5 +30,5 @@ This software is released under the MIT License, see LICENSE.txt.
 
 ## Author
 
-[Motoki Kimura](https://github.com/motokimura)
+[Motoki Kimura](https://github.com/motokimura)<br />
 [Team Birdport](https://www.airbus-fyi.com/team/index)
