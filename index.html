@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>Birdport Simulator ver3</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				color: #808080;
+				font-family:Monospace;
+				font-size:13px;
+				text-align:center;
+
+				background-color: #ffffff;
+				margin: 0px;
+				overflow: hidden;
+			}
+
+			#info {
+				position: absolute;
+				top: 0px; width: 100%;
+				padding: 5px;
+			}
+		</style>
+	</head>
+	<body>
+
+		<div id="container"></div><div id="info">
+			Birdport Simulator with WebGL 
+			by <a href="https://www.airbus-fyi.com/teams/2164/birdport" target="_blank">Team Birdport</a>
+		</div>
+		<script src="build/three.min.js"></script>
+
+		<script src="js/renderers/Projector.js"></script>
+		<script src="js/renderers/CanvasRenderer.js"></script>
+
+		<script src="js/libs/stats.min.js"></script>
+		<script src="js/libs/OrbitControls.js"></script>
+
+		<script src="obj/Bird.js"></script>
+
+		<script src="boid.js"></script>
+		
+		<script src="uav.js"></script>
+
+		<script>
+
+			var SCREEN_WIDTH = window.innerWidth,
+			SCREEN_HEIGHT = window.innerHeight,
+			SCREEN_WIDTH_HALF = SCREEN_WIDTH  / 2,
+			SCREEN_HEIGHT_HALF = SCREEN_HEIGHT / 2;
+
+			var camera, scene, renderer;
+			var birds, bird;
+			var boid, boids;
+			var uav_control, uavs, uav_geometries;
+			var stats, controls;
+			
+			var mousedown, mouse_x, mouse_y;
+			var r, theta, phi;
+			var target;
+
+			init();
+			animate();
+
+			function init() {
+				
+				mousedowm = false;
+				
+				r = 600; theta = Math.PI / 4; phi = Math.PI / 4;
+				target = new THREE.Vector3(0, 0, 500);
+				
+				camera = new THREE.PerspectiveCamera( 75, SCREEN_WIDTH / SCREEN_HEIGHT, 1, 1000000 );
+				updateCameraPosition ();
+
+				scene = new THREE.Scene();
+
+				birds = [];
+				boids = [];
+				
+				var init_x = 0; var init_z = 0; var init_y = 500;
+				var init_u = 4; var init_w = 0; var init_v = 0;
+				
+				for ( var i = 0; i < 100; i ++ ) {
+
+					boid = boids[ i ] = new Boid();
+					boid.position.x = Math.random() * 200 - 100 + init_x;
+					boid.position.y = Math.random() * 200 - 100 + init_y;
+					boid.position.z = Math.random() * 200 - 100 + init_z;
+					boid.velocity.x = Math.random() * 1 - 0.5 + init_u;
+					boid.velocity.y = Math.random() * 1 - 0.5 + init_v;
+					boid.velocity.z = Math.random() * 1 - 0.5 + init_w;
+					boid.setAvoidWalls( false );
+					//boid.setWorldSize( 500, 400, 500 );
+
+					bird = birds[ i ] = new THREE.Mesh( new Bird(), new THREE.MeshBasicMaterial( { color: 0x000000, side: THREE.DoubleSide } ) );
+					bird.phase = Math.floor( Math.random() * 62.83 );
+					scene.add( bird );
+				}
+				
+				uav_control = new UavControl();
+				uavs = [];
+				uav_geometries = [];
+				
+				for (var i = 0; i < uav_control.getUavNumber(); i++)
+				{
+					uavs[i] = new Uav();
+				}
+				
+				var birdport = new THREE.Mesh(new THREE.SphereGeometry(1000),new THREE.MeshPhongMaterial({color: 0x0000ff, wireframe: true}));
+				birdport.position.set (20000, 0, 10000);
+				scene.add (birdport);
+				
+				uav_control.setGoal(birdport.position);
+				uav_control.setPosition(new THREE.Vector3 (init_x, init_y, init_z));
+				uav_control.setVelocity(new THREE.Vector3 (init_u, init_v, init_w));
+				uav_control.arrangeUavs(uavs);
+				
+				for (var i = 0; i < uav_control.getUavNumber(); i++)
+				{
+					uav_geometries[i] = new THREE.Mesh(new THREE.SphereGeometry(5, 6, 6),new THREE.MeshPhongMaterial({color: 0xff0000, wireframe: true}));
+					uav_geometries[i].position.copy (uavs[i].position);
+					scene.add (uav_geometries[i]);
+				}
+				
+				renderer = new THREE.CanvasRenderer();
+				renderer.setClearColor( 0xffffff );
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( SCREEN_WIDTH, SCREEN_HEIGHT );
+				
+				document.addEventListener( 'mousedown', onDocumentMouseDown, false );
+				document.addEventListener( 'mouseup', onDocumentMouseUp, false );
+				document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+				if( typeof document.onmousewheel != 'undefined' )
+				{
+   					document.addEventListener( 'mousewheel', onDocumentMouseWheel, false );
+				}
+					else if( document.addEventListener )
+				{
+   					document.addEventListener( 'DOMMouseScroll', onDocumentMouseWheel, false );
+				}
+				document.body.appendChild( renderer.domElement );
+
+				stats = new Stats();
+				stats.domElement.style.position = 'absolute';
+				stats.domElement.style.left = '0px';
+				stats.domElement.style.top = '0px';
+				
+				scene.add( new THREE.AmbientLight(0xffffff) );
+				
+				// camera control
+				//controls = new THREE.OrbitControls (camera, renderer.domElement);
+				
+				var grid = new THREE.GridHelper(100000, 1000);
+				scene.add(grid);
+				grid.position.set(0, 0, 0);
+
+				document.getElementById( 'container' ).appendChild(stats.domElement);
+
+				window.addEventListener( 'resize', onWindowResize, false );
+
+			}
+
+			function onWindowResize() {
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+			}
+			
+			function onDocumentMouseDown ( event ) {
+				
+				mousedown = true;
+				
+				mouse_x = event.clientX;
+				mouse_y = event.clientY;
+			}
+			
+			function onDocumentMouseUp () {
+				
+				mousedown = false;
+			}
+			
+			function onDocumentMouseWheel( event ){
+				
+				if( event.detail ) 
+				{
+					r += -event.detail * 12;
+				}
+				else
+				{
+					r += event.wheelDelta * 0.3;
+				}
+			}
+			
+			function onDocumentMouseMove( event ) {
+				
+				if (mousedown) {
+					phi += (event.clientX - mouse_x) * 0.01;
+					theta += (event.clientY - mouse_y) * 0.01;
+					
+					mouse_x = event.clientX;
+					mouse_y = event.clientY;
+				}
+			}
+			
+			function updateCameraPosition () {
+				
+				if (r < 0.01) 
+				{
+					r = 0.01;
+				}
+				
+				if (theta < -Math.PI / 2 + 0.01){
+					theta = -Math.PI / 2 + 0.01;
+				}
+				if (theta >  Math.PI / 2 - 0.01){
+					theta =  Math.PI / 2 - 0.01;
+				}
+				
+				camera.position.x = target.x + r * Math.cos (theta) * Math.cos (phi);
+				camera.position.y = target.y + r * Math.sin (theta);
+				camera.position.z = target.z + r * Math.cos (theta) * Math.sin (phi);
+			}
+			
+
+			function animate() {
+
+				requestAnimationFrame( animate );
+				
+				updateCameraPosition ();
+
+				render();
+				stats.update();
+				//controls.update ();
+			}
+			
+			function render() {
+				
+				uav_control.run (uavs);
+				for (var i = 0; i < uavs.length; i++) 
+				{	
+					uav_geometries[i].position.copy( uavs[i].position );
+				}
+				
+				for ( var i = 0, il = birds.length; i < il; i++ ) 
+				{
+
+					boid = boids[ i ];
+					boid.run( boids, uavs );
+
+					bird = birds[ i ];
+					bird.position.copy( boids[ i ].position );
+
+					//color = bird.material.color;
+					//color.r = color.g = color.b = ( 500 - bird.position.z ) / 1000;
+
+					bird.rotation.y = Math.atan2( - boid.velocity.z, boid.velocity.x );
+					bird.rotation.z = Math.asin( boid.velocity.y / boid.velocity.length() );
+					
+					bird.phase = ( bird.phase + ( Math.max( 0, bird.rotation.z ) + 0.1 )  ) % 62.83;
+					bird.geometry.vertices[ 5 ].y = bird.geometry.vertices[ 4 ].y = Math.sin( bird.phase ) * 5;
+				}
+				
+				/*
+				var posSum = new THREE.Vector3();
+				var velSum = new THREE.Vector3();
+				
+				for ( var i = 0, il = birds.length; i < il; i++ ) 
+				{
+					boid = boids[ i ];
+					posSum.add( boid.position );
+					velSum.add( boid.velocity );
+				}
+				posSum.divideScalar( birds.length );
+				velSum.divideScalar( birds.length );
+				
+				//console.log (velSum.length());
+				
+				//controls.target = posSum;
+				target = posSum;
+				*/
+				
+				target.copy (uav_control.position);
+				camera.lookAt (target);
+				
+				renderer.render( scene, camera );
+			}
+
+		</script>
+
+	</body>
+</html>
