@@ -15,10 +15,7 @@ http://mokk.net/birdport/sim3/
 
 ## Screen shot
 
-<img src="https://raw.githubusercontent.com/motokimura/BirdportSimulator3D/master/screen_capture_1.png" />
-<br />
-<br />
-<img src="https://raw.githubusercontent.com/motokimura/BirdportSimulator3D/master/screen_capture_2.png" />
+<img src="https://raw.githubusercontent.com/motokimura/BirdportSimulator3D/master/screen_capture.png" />
 
 ## Requirement
 
