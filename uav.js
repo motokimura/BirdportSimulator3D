@@ -13,8 +13,8 @@ var UavControl = function() {
 	
 	_cylinder_length = 500;
 	_cylinder_radius = 200;
-	_layer_number = 5;
-	_uav_on_layer = 6;
+	_layer_number = 10;
+	_uav_on_layer = 5;
 	_uav_phase = 0;
 	
 	this.setGoal = function (target)
@@ -107,6 +107,6 @@ var UavControl = function() {
 			}
 		}
 		
-		_uav_phase -= 0.01;
+		_uav_phase += 0.08;
 	};
 };
