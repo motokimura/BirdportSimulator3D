@@ -27,6 +27,5 @@ A browser that supports WebGL (Google Chrome is recommended).
 
 ## Team
 
-[Motoki Kimura](https://github.com/motokimura)
-
+[Motoki Kimura](https://github.com/motokimura)<br />
 Team Birdport
