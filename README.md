@@ -21,7 +21,7 @@ http://motokimura.github.io/birdport-simulator/
 
 A browser that supports WebGL (Google Chrome is recommended).
 
-## Licence
+## License
 
 [MIT License](LICENSE.txt)
 
