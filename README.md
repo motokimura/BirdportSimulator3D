@@ -13,9 +13,9 @@ Red objects going around birds are Drones, which are deployed to guide birds.
 
 http://motokimura.github.io/birdport-simulator/
 
-## Screen shot
+## Screenshot
 
-<img src="https://raw.githubusercontent.com/motokimura/BirdportSimulator3D/master/screen_capture.png" />
+<img src="screen_capture.png" />
 
 ## Requirements
 
