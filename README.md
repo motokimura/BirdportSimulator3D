@@ -1,4 +1,4 @@
-BirdportSimulator3D
+BirdportSimulator
 ====
 A simulator for [Fly Your Ideas](https://www.airbus-fyi.com/) 2015 competition by Airbus, witten in Javascript.
 
